@@ -10,6 +10,8 @@ import android.content.SharedPreferences;
 
 import android.os.Bundle;
 
+import android.preference.PreferenceManager;
+
 import android.provider.MediaStore;
 
 import android.speech.RecognizerIntent;
@@ -51,13 +53,14 @@ public class AerialFaithActivity extends ListActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        loadModuleListFromPreferences();
         initializeHeaderView();
+    }
 
-        // XXX get rid of this once the response intents are implemented
-        setListAdapter(new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, android.R.id.text1,
-                new String[] {}));
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadModuleListFromPreferences();
     }
 
 
@@ -107,21 +110,19 @@ public class AerialFaithActivity extends ListActivity {
 
 
     private void loadModuleListFromPreferences() {
-/*
-        // Deprecated after finding out about PreferenceActivity.
-        SharedPreferences prefs = getSharedPreferences(
-                ModuleManagement.PREFERENCES_NAME,
-                Context.MODE_PRIVATE);
-
-        Set<String> enabledModules = prefs.getStringSet(
-                ModuleManagement.ENABLED_MODULES,
-                new TreeSet<String>());
-
-        mModules.clear();
-        for(String name: enabledModules) {
-            mModules.add(ComponentName.unflattenFromString(name));
+        SharedPreferences prefs =
+                PreferenceManager.getDefaultSharedPreferences(this);
+        Set<String> modules = prefs.getStringSet(
+                ModuleManagement.LAST_ALL_MODULES, new TreeSet<String>());
+        ArrayList<String> components = new ArrayList<String>();
+        for(String name: modules) {
+            if(prefs.getBoolean(name, false))
+                components.add(name);
         }
-//*/
+        setListAdapter(new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1,
+                android.R.id.text1,
+                components));
     }
 
 
