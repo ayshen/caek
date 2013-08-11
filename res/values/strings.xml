@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">Caek</string>
     <string name="resolve_stalemates">Manage modules</string>
+    <string name="resolve_stalemates_category_key">com.example.aperture.core.RESOLVE_STALEMATES</string>
 
     <string name="contacts_module_label">Contacts</string>
     <string name="launcher_module_label">Launcher</string>

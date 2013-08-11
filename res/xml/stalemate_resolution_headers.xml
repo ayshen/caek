@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
-    <header android:fragment="com.example.aperture.core.StalemateResolutionActivity$ModulesFragment"
-            android:title="@string/resolve_stalemates"
-    />
-</preference-headers>

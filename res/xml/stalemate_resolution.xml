@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:key="@string/resolve_stalemates_category_key"
+                        android:title="@string/resolve_stalemates">
+    </PreferenceCategory>
+</PreferenceScreen>

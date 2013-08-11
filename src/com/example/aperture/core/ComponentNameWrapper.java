@@ -11,15 +11,17 @@ public class ComponentNameWrapper {
     public final ComponentName component;
 
     public ComponentNameWrapper(PackageManager pm, ResolveInfo info) {
+        String n;
         try {
-            name = pm.getText(
+            n = pm.getText(
                     info.serviceInfo.packageName,
                     info.serviceInfo.labelRes,
                     info.serviceInfo.applicationInfo).toString();
         }
         catch(Exception e) {
-            name = info.serviceInfo.name;
+            n= info.serviceInfo.name;
         }
+        name = n;
         component = new ComponentName(
                 info.serviceInfo.packageName,
                 info.serviceInfo.name);
