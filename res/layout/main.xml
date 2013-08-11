@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent">
+
+    <SearchView android:id="@android:id/text1"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:iconifiedByDefault="false"
+    />
+
+    <RadioGroup android:id="@id/text1_inputtype"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@android:id/text1"
+                android:layout_alignParentStart="true"
+                android:paddingTop="8dp"
+                android:paddingRight="8dp"
+                android:orientation="horizontal"
+                android:checkedButton="@android:id/button1">
+        <RadioButton android:id="@android:id/button1"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:text="Alph"
+                     android:textAppearance="?android:attr/textAppearanceMedium"
+        />
+        <RadioButton android:id="@android:id/button2"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:text="Num"
+                     android:textAppearance="?android:attr/textAppearanceMedium"
+        />
+    </RadioGroup>
+    <Button android:id="@id/button3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@android:id/text1"
+            android:layout_toEndOf="@id/text1_inputtype"
+            android:text="Vox"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+    />
+    <Button android:id="@id/button4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@android:id/text1"
+            android:layout_toEndOf="@id/button3"
+            android:text="Img"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+    />
+    <Button android:id="@id/button5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@android:id/text1"
+            android:layout_toEndOf="@id/button4"
+            android:text="Vid"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+    />
+
+</RelativeLayout>
