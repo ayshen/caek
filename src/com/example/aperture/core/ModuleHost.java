@@ -13,8 +13,8 @@ import java.lang.ref.WeakReference;
 public class ModuleHost implements ServiceConnection {
 
     private WeakReference<Context> mContext;
-    private ComponentName mComponent;
-    private IModule.Stub mBinder;
+    private ComponentName mComponent = null;
+    private IModule mBinder = null;
 
 
     public ModuleHost(Context context) {
@@ -22,17 +22,20 @@ public class ModuleHost implements ServiceConnection {
     }
 
 
-    public void bindTo(ComponentName name) {
+    public boolean bindTo(ComponentName name) {
         if(mBinder != null)
-            mContext.get().unbindService(this);
+            unbind();
 
         mComponent = name;
         Intent bindIntent = new Intent(ModuleManagement.ACTION_BIND_MODULE);
+        bindIntent.setComponent(name);
 
-        if(!mContext.get().bindService(bindIntent, this,
-                Context.BIND_AUTO_CREATE)) {
-            android.util.Log.w(this.toString(), "can't bind to " + name);
-        }
+        return mContext.get().bindService(bindIntent, this,
+                Context.BIND_AUTO_CREATE);
+    }
+
+    public void unbind() {
+        mContext.get().unbindService(this);
     }
 
 
@@ -50,6 +53,11 @@ public class ModuleHost implements ServiceConnection {
 
     public IModule getBinder() {
         return mBinder;
+    }
+
+
+    public ComponentName getComponent() {
+        return mComponent;
     }
 
 }

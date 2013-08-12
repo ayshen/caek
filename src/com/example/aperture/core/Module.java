@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.os.IBinder;
 
 
-public class Module extends Service {
+public abstract class Module extends Service {
 
 
     public final static String QUERY_TEXT =
@@ -16,7 +16,7 @@ public class Module extends Service {
             "com.example.aperture.core.Moduel.RESPONSE_THUMBNAIL";
 
 
-    private IModule mBinder = null;
+    protected IBinder mBinder = null;
 
 
     public IBinder onBind(Intent intent) {
@@ -30,6 +30,6 @@ public class Module extends Service {
     }
 
 
-    protected abstract IModule createBinder();
+    protected abstract IBinder createBinder();
 
 }

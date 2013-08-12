@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 
 import android.os.Bundle;
+import android.os.RemoteException;
 
 import android.preference.PreferenceManager;
 
@@ -25,42 +26,72 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
 import android.widget.SearchView;
 import android.widget.ToggleButton;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
 
 
-public class AerialFaithActivity extends ListActivity {
+public class AerialFaithActivity extends ListActivity
+        implements SearchView.OnQueryTextListener {
 
     private final static int REQUEST_SPEECH = 1;
     private final static int REQUEST_IMAGE = 2;
     private final static int REQUEST_VIDEO = 4;
 
 
-    private Set<ComponentName> mModules = new TreeSet<ComponentName>();
+    private List<ComponentName> mModules = null;
+
+    // TODO make a host pool to run several module queries in parallel.
+    private ModuleHost[] mHosts = null;
 
     private RelativeLayout header = null;
     private SearchView polybox = null;
+
+    private List<IntentWrapper> results = new ArrayList<IntentWrapper>();
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         initializeHeaderView();
+        setListAdapter(new ArrayAdapter<IntentWrapper>(this,
+                android.R.layout.simple_list_item_1,
+                android.R.id.text1,
+                results));
+    }
+
+
+    public void onStart() {
+        super.onStart();
+        loadModuleListFromPreferences();
+        mHosts = new ModuleHost[mModules.size()];
+        for(int i = 0; i < mModules.size(); ++i) {
+            mHosts[i] = new ModuleHost(this);
+            mHosts[i].bindTo(mModules.get(i));
+        }
+    }
+
+
+    public void onStop() {
+        super.onStart();
+        for(ModuleHost host: mHosts) {
+            host.unbind();
+        }
     }
 
 
     @Override
     protected void onResume() {
         super.onResume();
-        loadModuleListFromPreferences();
+        polybox.setQuery("", false);
     }
 
 
@@ -114,15 +145,11 @@ public class AerialFaithActivity extends ListActivity {
                 PreferenceManager.getDefaultSharedPreferences(this);
         Set<String> modules = prefs.getStringSet(
                 ModuleManagement.LAST_ALL_MODULES, new TreeSet<String>());
-        ArrayList<String> components = new ArrayList<String>();
+        mModules = new ArrayList<ComponentName>();
         for(String name: modules) {
             if(prefs.getBoolean(name, false))
-                components.add(name);
+                mModules.add(ComponentName.unflattenFromString(name));
         }
-        setListAdapter(new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1,
-                android.R.id.text1,
-                components));
     }
 
 
@@ -134,6 +161,9 @@ public class AerialFaithActivity extends ListActivity {
         polybox = (SearchView)header.findViewById(android.R.id.text1);
         polybox.setInputType(InputType.TYPE_CLASS_TEXT |
                 InputType.TYPE_TEXT_VARIATION_URI);
+
+        // @android:id/text1 : text queries
+        polybox.setOnQueryTextListener(this);
 
         // @android:id/button1
         // @android:id/button2
@@ -184,6 +214,43 @@ public class AerialFaithActivity extends ListActivity {
                 startActivityForResult(cameraIntent, REQUEST_VIDEO);
             }
         });
+    }
+
+
+    @Override
+    public boolean onQueryTextChange(String query) {
+        // TODO implement a host pool to run module queries in parallel.
+        Intent moduleQueryIntent = new Intent();
+        moduleQueryIntent.putExtra(Module.QUERY_TEXT, query);
+        results.clear();
+        for(ModuleHost host: mHosts) {
+            try {
+                List<Intent> partial = host.getBinder().process(moduleQueryIntent);
+                //results.addAll(partial);
+                for(Intent intent: partial) {
+                    results.add(new IntentWrapper(intent));
+                }
+            }
+            catch(Exception e) {
+                android.util.Log.e(this.toString(), e.toString());
+            }
+        }
+        ((ArrayAdapter)getListAdapter()).notifyDataSetChanged();
+        return true;
+    }
+
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return true; // No effect.
+    }
+
+
+    @Override
+    public void onListItemClick(ListView list, View view, int position, long id) {
+        IntentWrapper wrapper = (IntentWrapper)
+                getListView().getItemAtPosition(position);
+        startActivity(wrapper.mIntent);
     }
 
 }
