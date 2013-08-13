@@ -25,9 +25,12 @@ public class EmailModule extends Module {
                 List<Intent> response = new ArrayList<Intent>();
                 String query = data.getStringExtra(Module.QUERY_TEXT);
 
-                // (Experimental) strip conversational text.
+                // (experimental) Strip conversational text.
                 String preamble = "send an email to ";
                 if(query.toLowerCase().startsWith(preamble))
+                    query = query.substring(preamble.length());
+                preamble = "mailto:";
+                if(query.startsWith(preamble))
                     query = query.substring(preamble.length());
 
                 // Make sure there's a query.

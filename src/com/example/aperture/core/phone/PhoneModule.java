@@ -25,9 +25,16 @@ public class PhoneModule extends Module {
                 List<Intent> response = new ArrayList<Intent>();
                 String query = data.getStringExtra(Module.QUERY_TEXT);
 
+                // Ignore empty strings.
+                if(query == null || query.length() == 0)
+                    return response;
+
                 // (experimental) Strip conversational text.
                 String preamble = "call ";
                 if(query.toLowerCase().startsWith(preamble))
+                    query = query.substring(preamble.length());
+                preamble = "tel:";
+                if(query.startsWith(preamble))
                     query = query.substring(preamble.length());
 
                 // Check the query.
@@ -35,6 +42,10 @@ public class PhoneModule extends Module {
                 for(char c: query.toCharArray())
                     if(!PhoneNumberUtils.is12Key(c))
                         return response;
+
+                // Check the query again.
+                if(PhoneNumberUtils.formatNumber(query).length() == 0)
+                    return response;
 
                 // Build a dialer intent, so that the user can confirm the
                 // number in the dialer before the call is placed.

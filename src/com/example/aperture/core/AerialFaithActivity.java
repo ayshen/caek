@@ -220,6 +220,10 @@ public class AerialFaithActivity extends ListActivity
     @Override
     public boolean onQueryTextChange(String query) {
         // TODO implement a host pool to run module queries in parallel.
+
+        if(query.length() == 0)
+            return true;
+
         Intent moduleQueryIntent = new Intent();
         moduleQueryIntent.putExtra(Module.QUERY_TEXT, query);
         results.clear();

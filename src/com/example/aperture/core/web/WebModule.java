@@ -25,10 +25,14 @@ public class WebModule extends Module {
                 List<Intent> response = new ArrayList<Intent>();
                 String query = data.getStringExtra(Module.QUERY_TEXT);
 
+                // Ignore empty queries.
+                if(query == null || query.length() == 0)
+                    return response;
+
                 // Make sure there's a scheme.
                 Uri addr = Uri.parse(query);
                 if(addr.isRelative())
-                    addr = addr.buildUpon().scheme("http").build();
+                    addr = Uri.parse("http://" + query);
 
                 // Make an intent to browse.
                 Intent webIntent = new Intent(Intent.ACTION_VIEW);

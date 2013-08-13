@@ -23,8 +23,12 @@ public class SearchModule extends Module {
             public List<Intent> process(Intent data) {
 
                 List<Intent> response = new ArrayList<Intent>();
-                Intent searchIntent = new Intent(Intent.ACTION_SEARCH);
+                Intent searchIntent = new Intent(Intent.ACTION_WEB_SEARCH);
                 String query = data.getStringExtra(Module.QUERY_TEXT);
+
+                // Ignore empty queries.
+                if(query == null || query.length() == 0)
+                    return response;
 
                 searchIntent.putExtra(SearchManager.QUERY, query);
                 searchIntent.putExtra(Module.RESPONSE_TEXT, "Search for " + query);
