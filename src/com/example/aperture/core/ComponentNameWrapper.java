@@ -5,6 +5,13 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
 
+/** Wrapper class for ComponentName objects.
+This used to be part of a debug system where the modules were presented in a
+ListView, but that has since been removed. Now they're just convenient for
+storing a module's label.
+
+<em>Beware! This class may disappear without warning.</em>
+*/
 public class ComponentNameWrapper {
 
     private final String name;
