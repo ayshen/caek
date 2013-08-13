@@ -7,6 +7,10 @@ appropriate actions. It is built to be extended by developing and installing
 third-party modules that can specialize in contexts such as social networks or
 ubiquitous capture.
 
+The current functionality is similar to the experience of [Just
+Type](https://developer.palm.com/content/api/dev-guide/mojo/just-type.html), but
+I hope to expand it to be a bit more powerful (see Modules, below).
+
 ## Modules
 
 Modules are independently packaged services that you can install to extend Caek.
