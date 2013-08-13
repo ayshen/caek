@@ -7,4 +7,7 @@
     <string name="contacts_module_label">Contacts</string>
     <string name="email_module_label">Email</string>
     <string name="launcher_module_label">Launcher</string>
+    <string name="phone_module_label">Phone</string>
+    <string name="search_module_label">Search</string>
+    <string name="web_module_label">Browser</string>
 </resources>

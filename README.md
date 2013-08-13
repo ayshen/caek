@@ -24,10 +24,10 @@ functionality.
 
 * **Launcher**: matches text with the names of installed apps.
 * **Contacts**: matches text with contacts in your device.
-*  **Email**: recognizes email addresses.
-* (coming soon) **Phone**: recognizes phone numbers.
-* (coming soon) **Search**: provides an action for performing a search.
-* (coming soon) **Web**: recognizes URIs.
+* **Email**: recognizes email addresses.
+* **Phone**: recognizes phone numbers.
+* **Search**: provides an action for performing a search.
+* **Browser**: recognizes URIs.
 
 ***Modules are disabled by default.*** You must enable modules before they will
 become active, because (1) Caek currently has no way of knowing when you install

@@ -56,5 +56,29 @@
             </intent-filter>
         </service>
 
+        <service android:name=".phone.PhoneModule"
+                 android:label="@string/phone_module_label"
+                 android:permission="com.example.aperture.core.BIND_MODULES">
+            <intent-filter>
+                <action android:name="com.example.aperture.core.ACTION_BIND_MODULE" />
+            </intent-filter>
+        </service>
+
+        <service android:name=".search.SearchModule"
+                 android:label="@string/search_module_label"
+                 android:permission="com.example.aperture.core.BIND_MODULES">
+            <intent-filter>
+                <action android:name="com.example.aperture.core.ACTION_BIND_MODULE" />
+            </intent-filter>
+        </service>
+
+        <service android:name=".web.WebModule"
+                 android:label="@string/web_module_label"
+                 android:permission="com.example.aperture.core.BIND_MODULES">
+            <intent-filter>
+                <action android:name="com.example.aperture.core.ACTION_BIND_MODULE" />
+            </intent-filter>
+        </service>
+
     </application>
 </manifest>
