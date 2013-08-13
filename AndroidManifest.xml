@@ -30,6 +30,8 @@
         <activity android:name="StalemateResolutionActivity">
         </activity>
 
+        <!-- =============================================================== -->
+
         <service android:name=".contacts.ContactsModule"
                  android:label="@string/contacts_module_label"
                  android:permission="com.example.aperture.core.BIND_MODULES">
@@ -40,6 +42,14 @@
 
         <service android:name=".launcher.LauncherModule"
                  android:label="@string/launcher_module_label"
+                 android:permission="com.example.aperture.core.BIND_MODULES">
+            <intent-filter>
+                <action android:name="com.example.aperture.core.ACTION_BIND_MODULE" />
+            </intent-filter>
+        </service>
+
+        <service android:name=".email.EmailModule"
+                 android:label="@string/email_module_label"
                  android:permission="com.example.aperture.core.BIND_MODULES">
             <intent-filter>
                 <action android:name="com.example.aperture.core.ACTION_BIND_MODULE" />
