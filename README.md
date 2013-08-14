@@ -84,7 +84,7 @@ Content queries are given to your module as extras in the
 [`Intent`](http://developer.android.com/reference/android/content/Intent.html)
 `data`.
 
-* Text queries are Strings under the key `Module.QUERY_TEXT`.
+* Text queries are `String`s under the key `Module.QUERY_TEXT`.
 * Audio queries are not yet implemented.
 * Image queries are not yet implemented.
 * Video queries are not yet implemented.
