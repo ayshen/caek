@@ -55,7 +55,7 @@ compatibility issues right now.**
 ## Developing modules
 
 Modules are simple subclasses of
-[Service](http://developer.android.com/reference/android/app/Service.html).
+[`Service`](http://developer.android.com/reference/android/app/Service.html).
 To make your own module (we'll call it `MyModule`), you should follow the format
 shown here:
 
@@ -81,7 +81,7 @@ shown here:
     }
 
 Content queries are given to your module as extras in the
-[Intent](http://developer.android.com/reference/android/content/Intent.html)
+[`Intent`](http://developer.android.com/reference/android/content/Intent.html)
 `data`.
 
 * Text queries are Strings under the key `Module.QUERY_TEXT`.
@@ -90,7 +90,7 @@ Content queries are given to your module as extras in the
 * Video queries are not yet implemented.
 
 Your module is expected to return a
-[List](http://developer.android.com/reference/java/util/List.html) of `Intent`
+[`List`](http://developer.android.com/reference/java/util/List.html) of `Intent`
 objects, each of which should be ready to be passed ***without modification***
 into
 [`Context.startActivity()`](http://developer.android.com/reference/android/content/Context.html#startActivity%28android.content.Intent%29).
@@ -100,14 +100,14 @@ a small (48dp square or smaller) icon.
 * The label should be attached to the `Intent` as a `String` extra under the key
   `Module.RESPONSE_TEXT`.
 * The icon should be attached as a
-  [Bitmap](http://developer.android.com/reference/android/grpahics/Bitmap.html)
+  [`Bitmap`](http://developer.android.com/reference/android/grpahics/Bitmap.html)
   under the key `Module.RESPONSE_THUMBNAIL`. It isn't used right now, but it
   may show up in a future commit.
 
 Your module is also a
-[Service](http://developer.android.com/reference/android/app/Service.html), so
+[`Service`](http://developer.android.com/reference/android/app/Service.html), so
 you can do anything that a service can do, such as writing to your
-[SharedPreferences](http://developer.android.com/reference/android/content/SharedPreferences.html),
+[`SharedPreferences`](http://developer.android.com/reference/android/content/SharedPreferences.html),
 performing file I/O, reading the hardware sensors, etc. This should make it easy
 to implement things like context-awareness and interaction history.
 
@@ -118,12 +118,4 @@ Using modules to build an AI reminded me of GLaDOS from
 project). The intelligence modules that attach to Caek sort of act like the
 [Aperture Science Artificial Personality
 Constructs](http://theportalwiki.com/wiki/Cores), one of which (the "Cake Core")
-is preoccupied with cake. The misspelling comes from
-[Vechs](http://youtube.com/user/vechz), the renowned author of the [Super
-Hostile](http://www.minecraftforum.net/topic/191908-ctmcollection-%e2%98%a0-vechs-super-hostile-series-%e2%98%a0/)
-series of [Minecraft](http://minecraft.net) custom maps: in [episode 8 of his
-let's-play](http://www.youtube.com/watch?v=RBAy1pcW5UQ) of [Uncharted Territory
-2](http://www.minecraftforum.net/topic/1380417-amlups-uncharted-territory-series-ut3-released-for-162/)
-by [AnotherMinecraftLP (Amlup
-(Amlup))](http://www.youtube.com/user/anotherminecraftlp), he found a hidden
-room with a cake and titled the video "Not Mad About Caek".
+is preoccupied with cake.
