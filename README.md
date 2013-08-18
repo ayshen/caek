@@ -80,6 +80,24 @@ shown here:
         }
     }
 
+Remember to declare your module as a service in your application, as shown
+below. You don't have to write a standalone application for your module; you
+can just bundle the module into your existing application if you want to add
+support for Caek.
+
+*NB. You should supply a label for your module. If you do, it MUST be a
+reference to a string resource in your package. The label is displayed when
+users manage which modules are enabled.*
+
+    <service android:name=".MyModule"
+             android:label="@string/my_module_label"
+             android:permission="com.example.aperture.core.BIND_MODULES">
+        <intent-filter>
+            <action android:name="com.example.aperture.core.ACTION_BIND_MODULE"
+            />
+        </intent-filter>
+    </service>
+
 Content queries are given to your module as extras in the
 [`Intent`](http://developer.android.com/reference/android/content/Intent.html)
 `data`.
