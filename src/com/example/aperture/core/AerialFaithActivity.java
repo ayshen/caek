@@ -71,12 +71,7 @@ public class AerialFaithActivity extends ListActivity
 
     public void onStart() {
         super.onStart();
-        loadModuleListFromPreferences();
-        mHosts = new ModuleHost[mModules.size()];
-        for(int i = 0; i < mModules.size(); ++i) {
-            mHosts[i] = new ModuleHost(this);
-            mHosts[i].bindTo(mModules.get(i));
-        }
+        initializeModuleHosts();
     }
 
 
@@ -85,13 +80,25 @@ public class AerialFaithActivity extends ListActivity
         for(ModuleHost host: mHosts) {
             host.unbind();
         }
+        mHosts = null;
     }
 
 
     @Override
     protected void onResume() {
         super.onResume();
-        polybox.setQuery("", false);
+        if(polybox.getQuery().toString().trim().length() > 0) {
+            initializeModuleHosts();
+            // This is a terrible hack. If there are many modules, this may not
+            // be enough time for the services to bind.
+            // FIXME
+            new android.os.Handler().postDelayed(new Runnable() {
+                public void run() {
+                    AerialFaithActivity.this.onQueryTextChange(
+                            AerialFaithActivity.this.polybox.getQuery().toString());
+                }
+            }, 100);
+        }
     }
 
 
@@ -149,6 +156,20 @@ public class AerialFaithActivity extends ListActivity
         for(String name: modules) {
             if(prefs.getBoolean(name, false))
                 mModules.add(ComponentName.unflattenFromString(name));
+        }
+    }
+
+
+    private void initializeModuleHosts() {
+        // TODO make a host pool to make queries in parallel.
+        if(mHosts != null)
+            for(ModuleHost host: mHosts)
+                host.unbind();
+        loadModuleListFromPreferences();
+        mHosts = new ModuleHost[mModules.size()];
+        for(int i = 0; i < mModules.size(); ++i) {
+            mHosts[i] = new ModuleHost(this);
+            mHosts[i].bindTo(mModules.get(i));
         }
     }
 
@@ -221,16 +242,24 @@ public class AerialFaithActivity extends ListActivity
     public boolean onQueryTextChange(String query) {
         // TODO implement a host pool to run module queries in parallel.
 
-        if(query.length() == 0)
+        results.clear();
+
+        if(query.trim().length() == 0) {
+            ((ArrayAdapter)getListAdapter()).notifyDataSetChanged();
             return true;
+        }
 
         Intent moduleQueryIntent = new Intent();
         moduleQueryIntent.putExtra(Module.QUERY_TEXT, query);
-        results.clear();
         for(ModuleHost host: mHosts) {
             try {
-                List<Intent> partial = host.getBinder().process(moduleQueryIntent);
-                //results.addAll(partial);
+                IModule binder = host.getBinder();
+                if(binder == null) {
+                    android.util.Log.w(this.toString(), "binder for " + host +
+                            " was not ready in time for onQueryTextChange()");
+                    continue;
+                }
+                List<Intent> partial = binder.process(moduleQueryIntent);
                 for(Intent intent: partial) {
                     results.add(new IntentWrapper(intent));
                 }
@@ -254,6 +283,8 @@ public class AerialFaithActivity extends ListActivity
     public void onListItemClick(ListView list, View view, int position, long id) {
         IntentWrapper wrapper = (IntentWrapper)
                 getListView().getItemAtPosition(position);
+        polybox.setQuery("", false);
+        // TODO notify the module that its response was selected?
         startActivity(wrapper.mIntent);
     }
 

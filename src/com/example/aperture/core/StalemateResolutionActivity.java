@@ -14,6 +14,7 @@ import android.content.pm.ResolveInfo;
 
 import android.os.Bundle;
 
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
@@ -122,7 +123,8 @@ public class StalemateResolutionActivity extends PreferenceActivity {
 
             // Create switch preferences for each module.
             for(ComponentNameWrapper name: installedModules) {
-                category.addPreference(switchPreferenceFor(name));
+                Preference pref = switchPreferenceFor(name);
+                category.addPreference(pref);
             }
         }
 
