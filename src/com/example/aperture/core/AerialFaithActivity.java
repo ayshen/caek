@@ -46,16 +46,12 @@ public class AerialFaithActivity extends ListActivity
     private final static int REQUEST_IMAGE = 2;
     private final static int REQUEST_VIDEO = 4;
 
+    private ModuleDispatcher mDispatcher = null;
 
-    private List<ComponentName> mModules = null;
-
-    // TODO make a host pool to run several module queries in parallel.
-    private ModuleHost[] mHosts = null;
+    private List<IntentWrapper> results = new ArrayList<IntentWrapper>();
 
     private RelativeLayout header = null;
     private SearchView polybox = null;
-
-    private List<IntentWrapper> results = new ArrayList<IntentWrapper>();
 
 
     @Override
@@ -71,16 +67,14 @@ public class AerialFaithActivity extends ListActivity
 
     public void onStart() {
         super.onStart();
-        initializeModuleHosts();
+        mDispatcher = new ModuleDispatcher(this);
     }
 
 
     public void onStop() {
-        super.onStart();
-        for(ModuleHost host: mHosts) {
-            host.unbind();
-        }
-        mHosts = null;
+        super.onStop();
+        mDispatcher.destroy();
+        mDispatcher = null;
     }
 
 
@@ -88,7 +82,8 @@ public class AerialFaithActivity extends ListActivity
     protected void onResume() {
         super.onResume();
         if(polybox.getQuery().toString().trim().length() > 0) {
-            initializeModuleHosts();
+            mDispatcher.notifyEnabledModulesChanged();
+
             // This is a terrible hack. If there are many modules, this may not
             // be enough time for the services to bind.
             // FIXME
@@ -143,33 +138,6 @@ public class AerialFaithActivity extends ListActivity
         else if(request == REQUEST_VIDEO) {
             android.widget.Toast.makeText(this, "NotImplemented (vid)",
             android.widget.Toast.LENGTH_SHORT).show();
-        }
-    }
-
-
-    private void loadModuleListFromPreferences() {
-        SharedPreferences prefs =
-                PreferenceManager.getDefaultSharedPreferences(this);
-        Set<String> modules = prefs.getStringSet(
-                ModuleManagement.LAST_ALL_MODULES, new TreeSet<String>());
-        mModules = new ArrayList<ComponentName>();
-        for(String name: modules) {
-            if(prefs.getBoolean(name, false))
-                mModules.add(ComponentName.unflattenFromString(name));
-        }
-    }
-
-
-    private void initializeModuleHosts() {
-        // TODO make a host pool to make queries in parallel.
-        if(mHosts != null)
-            for(ModuleHost host: mHosts)
-                host.unbind();
-        loadModuleListFromPreferences();
-        mHosts = new ModuleHost[mModules.size()];
-        for(int i = 0; i < mModules.size(); ++i) {
-            mHosts[i] = new ModuleHost(this);
-            mHosts[i].bindTo(mModules.get(i));
         }
     }
 
@@ -251,23 +219,10 @@ public class AerialFaithActivity extends ListActivity
 
         Intent moduleQueryIntent = new Intent();
         moduleQueryIntent.putExtra(Module.QUERY_TEXT, query);
-        for(ModuleHost host: mHosts) {
-            try {
-                IModule binder = host.getBinder();
-                if(binder == null) {
-                    android.util.Log.w(this.toString(), "binder for " + host +
-                            " was not ready in time for onQueryTextChange()");
-                    continue;
-                }
-                List<Intent> partial = binder.process(moduleQueryIntent);
-                for(Intent intent: partial) {
-                    results.add(new IntentWrapper(intent));
-                }
-            }
-            catch(Exception e) {
-                android.util.Log.e(this.toString(), e.toString());
-            }
-        }
+
+        List<IntentWrapper> responses = mDispatcher.dispatch(moduleQueryIntent);
+        results.addAll(responses);
+
         ((ArrayAdapter)getListAdapter()).notifyDataSetChanged();
         return true;
     }
