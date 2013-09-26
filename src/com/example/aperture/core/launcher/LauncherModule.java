@@ -26,6 +26,11 @@ public class LauncherModule extends Module {
                 if(query.length() == 0)
                     return response;
 
+                if(query.startsWith("start ") || query.startsWith("launch ") ||
+                        query.startsWith("open ")) {
+                    query = query.substring(query.indexOf(' ')).trim();
+                }
+
                 PackageManager pm = LauncherModule.this.getPackageManager();
                 Intent launcherIntent = new Intent(Intent.ACTION_MAIN);
                 launcherIntent.addCategory(Intent.CATEGORY_LAUNCHER);
@@ -34,15 +39,6 @@ public class LauncherModule extends Module {
 
                 for(ResolveInfo info: activities) {
                     String label = info.loadLabel(pm).toString();
-/*
-                    try {
-                        if(info.activityInfo.labelRes != 0)
-                        label = pm.getText(info.activityInfo.packageName,
-                                info.activityInfo.labelRes,
-                                info.activityInfo.applicationInfo).toString();
-                    }
-                    catch(Exception e) {}
-//*/
                     if(label.toLowerCase().contains(query.toLowerCase())) {
                         Intent launchIntent = new Intent(Intent.ACTION_MAIN);
                         launchIntent.addCategory(Intent.CATEGORY_LAUNCHER);
