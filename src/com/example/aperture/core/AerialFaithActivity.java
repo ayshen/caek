@@ -174,8 +174,8 @@ public class AerialFaithActivity extends ListActivity
             }
         });
 
-        // @id/button3 : speech recognition
-        Button b3 = (Button)header.findViewById(R.id.button3);
+        // @android:id/button3 : speech recognition
+        Button b3 = (Button)header.findViewById(android.R.id.button3);
         b3.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent speechIntent = new Intent(

@@ -31,7 +31,7 @@
                      android:textAppearance="?android:attr/textAppearanceMedium"
         />
     </RadioGroup>
-    <Button android:id="@id/button3"
+    <Button android:id="@android:id/button3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@android:id/text1"
@@ -43,7 +43,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@android:id/text1"
-            android:layout_toEndOf="@id/button3"
+            android:layout_toEndOf="@android:id/button3"
             android:text="Img"
             android:textAppearance="?android:attr/textAppearanceMedium"
     />
