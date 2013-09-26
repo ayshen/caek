@@ -18,13 +18,13 @@ public abstract class Module extends Service {
     /** Intent extra key for a plain text response from a module.
     */
     public final static String RESPONSE_TEXT =
-            "com.example.aperture.core.Moduel.RESPONSE_TEXT";
+            "com.example.aperture.core.Module.RESPONSE_TEXT";
 
     /** Intent extra key for an icon response from a module. Not currently
     used, but will be incorporated in the future as part of the results.
     */
     public final static String RESPONSE_THUMBNAIL =
-            "com.example.aperture.core.Moduel.RESPONSE_THUMBNAIL";
+            "com.example.aperture.core.Module.RESPONSE_THUMBNAIL";
 
 
     /** Singleton instance of the exposed interface for a module.
