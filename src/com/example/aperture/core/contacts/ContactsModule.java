@@ -63,6 +63,9 @@ public class ContactsModule extends Module {
             private Intent guessPhone(String query, Cursor c,
                     String[] projection) {
 
+                if(PhoneNumberUtils.stripSeparators(query).length() == 0)
+                    return null;
+
                 // A phone number should be entirely dialable.
                 boolean queryIsDialable = true;
                 char[] q = PhoneNumberUtils.stripSeparators(query)
@@ -160,7 +163,7 @@ public class ContactsModule extends Module {
                 }
 
                 for(c2.moveToFirst(); !c2.isAfterLast(); c2.moveToNext()) {
-                    if(c2.getString(0).indexOf(query) == -1) {
+                    if(!c2.getString(0).startsWith(query)) {
                         continue;
                     }
 
@@ -224,9 +227,12 @@ public class ContactsModule extends Module {
                     c.moveToFirst();
                     Intent quickActionGuess = guessQuickAction(query, c,
                             projection);
-                    if(quickActionGuess != null)
+                    if(quickActionGuess != null) {
                         results.add(quickActionGuess);
-                    results.add(createViewIntent(c, projection));
+                    }
+                    else {
+                        results.add(createViewIntent(c, projection));
+                    }
                 }
                 else {
                     // Make a people-viewer intent for each candidate.
