@@ -10,4 +10,10 @@
     <string name="phone_module_label">Phone</string>
     <string name="search_module_label">Search</string>
     <string name="web_module_label">Browser</string>
+
+    <string name="speech_try_again">Touch to speak</string>
+    <string name="speech_listening">Speak now</string>
+
+    <string name="inputtype_alph">Words</string>
+    <string name="inputtype_tel">Numbers</string>
 </resources>

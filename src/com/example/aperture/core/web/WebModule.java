@@ -29,6 +29,13 @@ public class WebModule extends Module {
                 if(query == null || query.length() == 0)
                     return response;
 
+                // Ignore the query if it has spaces.
+                // Might not be the best thing to do, but most people don't put
+                // spaces when they type URIs. Also, the speech recognizer
+                // turns ".com" into "comma", which turns into ","
+                if(query.indexOf(' ') != -1)
+                    return response;
+
                 // Make sure there's a scheme.
                 Uri addr = Uri.parse(query);
                 if(addr.isRelative())
