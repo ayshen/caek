@@ -1,17 +1,11 @@
 package com.example.aperture.core.contacts;
 
 import android.content.Context;
-import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.net.Uri;
-import android.provider.ContactsContract;
-import android.provider.ContactsContract.CommonDataKinds;
 import android.os.IBinder;
-import android.telephony.PhoneNumberUtils;
+import android.provider.ContactsContract;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -22,58 +16,82 @@ import com.example.aperture.core.Module;
 
 
 public class ContactsModule extends Module {
+
+    private final static Object[] FILTERS = new Object[] {
+            EmailFilter.class,
+            PhoneFilter.class
+    };
+
     @Override
     public IBinder createBinder() {
         return new ContactsModule.Binder(this);
     }
 
     private final static class Binder extends IModule.Stub {
+
+        private final static String[] CONTENT_FILTER_PROJECTION =
+                new String[] {
+            ContactsContract.Contacts._ID,
+            ContactsContract.Contacts.LOOKUP_KEY,
+            ContactsContract.Contacts.DISPLAY_NAME_PRIMARY
+        };
+
         private WeakReference<ContactsModule> mContext;
 
         public Binder(ContactsModule context) {
             mContext = new WeakReference<ContactsModule>(context);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public List<Intent> process(Intent data) {
-//android.util.Log.i(this.toString(), "process() started: " + System.nanoTime());
             List<Intent> results = new ArrayList<Intent>();
             String query = data.getStringExtra(Module.QUERY_TEXT);
 
-//android.util.Log.i(this.toString(), "starting email filtering: " + System.nanoTime());
-            results.addAll(new EmailFilter(mContext.get()).filter(query));
-//android.util.Log.i(this.toString(), "starting phone filtering: " + System.nanoTime());
-            results.addAll(new PhoneFilter(mContext.get()).filter(query));
-//android.util.Log.i(this.toString(), "quick action filtering produced " + results.size() + " results: " + System.nanoTime());
+            for(int i = 0; i < FILTERS.length; ++i) {
+                try {
+                    Class<? extends Filter> filterClass = (Class<? extends Filter>)FILTERS[i];
+                    Filter filter = filterClass.newInstance();
+                    results.addAll(filter.filter(mContext.get(), query));
+                }
+                catch(ClassCastException ecas) {}
+                catch(IllegalAccessException eilx) {}
+                catch(InstantiationException enew) {}
+            }
 
             if(results.size() == 0)
-                results.addAll(this.contactsLike(query));
+                results.addAll(viewIntentsFor(contactsLike(query)));
 
-//android.util.Log.i(this.toString(), "process() completed: " + System.nanoTime());
             return results;
         }
 
-        private List<Intent> contactsLike(String query) {
+        private List<Intent> viewIntentsFor(Cursor contacts) {
             List<Intent> results = new ArrayList<Intent>();
-            for(IterableCursor c = new IterableCursor(
-                    QueryHelper.contactsLike(query, mContext.get()));
-                    c.hasNext(); ) {
-                Cursor contact = c.next();
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(createLookupUri(contact, mContext.get()));
-                intent.putExtra(Module.RESPONSE_TEXT,
-                        contact.getString(QueryHelper.DISPLAY_NAME_PRIMARY_INDEX));
-                results.add(intent);
+            for(contacts.moveToFirst(); !contacts.isAfterLast();
+                    contacts.moveToNext()) {
+                results.add(viewIntentFor(contacts.getLong(0),
+                        contacts.getString(1), contacts.getString(2)));
             }
+            contacts.close();
             return results;
         }
 
-        private Uri createLookupUri(Cursor contact, Context context) {
-            return ContactsContract.Contacts.lookupContact(
-                    context.getContentResolver(),
-                    ContactsContract.Contacts.getLookupUri(
-                            contact.getLong(QueryHelper._ID_INDEX),
-                            contact.getString(QueryHelper.LOOKUP_KEY_INDEX)));
+        private Intent viewIntentFor(long id, String lookupKey,
+                String displayNamePrimary) {
+            Intent viewIntent = new Intent(Intent.ACTION_VIEW);
+            viewIntent.setData(ContactsContract.Contacts.lookupContact(
+                    mContext.get().getContentResolver(),
+                    ContactsContract.Contacts.getLookupUri(id, lookupKey)));
+            viewIntent.putExtra(Module.RESPONSE_TEXT, displayNamePrimary);
+            return viewIntent;
+        }
+
+        private Cursor contactsLike(String query) {
+            return mContext.get().getContentResolver().query(
+                    Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_FILTER_URI,
+                            Uri.encode(query)),
+                    CONTENT_FILTER_PROJECTION,
+                    null, null, null);
         }
     }
 }

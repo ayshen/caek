@@ -6,91 +6,120 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
 import com.example.aperture.core.Module;
 
 
-public class EmailFilter extends QuickActionFilter
-{
-    public EmailFilter(Context context)
-    {
-        mContext = new WeakReference<Context>(context);
+public class EmailFilter extends Filter {
+
+    private final static String[] DATA_PROJECTION = new String[] {
+            ContactsContract.Contacts.LOOKUP_KEY,
+            ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
+            ContactsContract.Data.DATA1
+    };
+    private final static String MIMETYPE_SELECTION =
+            ContactsContract.Data.MIMETYPE + "=?";
+    private final static String[] EMAIL_MIMETYPE = new String[] {
+            ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE
+    };
+
+    private final static class EmailComparer implements java.util.Comparator<Intent> {
+        private String mFragment;
+        public EmailComparer(String fragment) {
+            mFragment = fragment;
+        }
+        @Override
+        public boolean equals(Object o) { return false; }
+        @Override
+        public int compare(Intent a, Intent b) {
+            // Get the emails from the intents.
+            String x = a.getStringExtra(ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE);
+            String y = b.getStringExtra(ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE);
+
+            // Split the emails into usernames and domains.
+            String xu = x.substring(0, x.indexOf('@'));
+            String yu = y.substring(0, y.indexOf('@'));
+            String xd = x.substring(x.indexOf('@')+1);
+            String yd = y.substring(y.indexOf('@')+1);
+
+            // Get the locations of the query in the usernames and domains.
+            int ixu = xu.indexOf(mFragment), iyu = yu.indexOf(mFragment);
+            int ixd = xd.indexOf(mFragment), iyd = yd.indexOf(mFragment);
+
+            // TODO refactor this to be less iffy
+            // Explicitly writing out the comparision logic to avoid violating
+            // general sorting contract for total ordering.
+            if(ixu != -1 && iyu != -1) {
+                if(ixu < iyu) return -1;
+                else if(iyu < ixu) return 1;
+                else return xu.compareTo(yu);
+            }
+            else if(ixu != -1 && iyu == -1) {
+                return -1;
+            }
+            else if(ixu == -1 && iyu != -1) {
+                return 1;
+            }
+            else {
+                if(ixd != -1 && iyd != -1) {
+                    if(ixd < iyd) return -1;
+                    else if(iyd < ixd) return 1;
+                    else return xd.compareTo(yd);
+                }
+                else if(ixd != -1 && iyd == -1) {
+                    return -1;
+                }
+                else if(ixd == -1 && iyd != -1) {
+                    return 1;
+                }
+                else
+                    return x.compareTo(y);
+            }
+        }
+    }
+
+    private void sort(List<Intent> results, String query) {
+        Intent[] buffer = new Intent[results.size()];
+        java.util.Arrays.sort(results.toArray(buffer), 0, buffer.length,
+                new EmailComparer(query));
+        results.clear();
+        for(int i = 0; i < buffer.length; ++i)
+            results.add(buffer[i]);
     }
 
     @Override
-    public List<Intent> filter(String query)
-    {
-android.util.Log.i(this.toString(), "filter() started: " + System.nanoTime());
+    public List<Intent> filter(Context context, String query) {
         List<Intent> results = new ArrayList<Intent>();
 
-        if(query.trim().length() == 0) return results;
+        Cursor data = context.getContentResolver().query(
+                ContactsContract.Data.CONTENT_URI,
+                DATA_PROJECTION,
+                MIMETYPE_SELECTION,
+                EMAIL_MIMETYPE,
+                null);
 
-        String[] prefixes = new String[]
-        {
-                "send an email to ",
-                "send email to ",
-                "email "
-        };
-        for(String prefix: prefixes)
-        {
-            if(query.toLowerCase().startsWith(prefix))
-                query = query.substring(prefix.length());
+        for(data.moveToFirst(); !data.isAfterLast(); data.moveToNext()) {
+            String email = data.getString(2);
+            String username = email.substring(0, email.indexOf('@'));
+            String domain = email.substring(email.indexOf('@')+1);
+
+            if(email.contains(query))
+                results.add(intentFor(data.getString(1), email));
         }
+        data.close();
 
-android.util.Log.i(this.toString(), "starting filtered contacts loop: " + System.nanoTime());
-        for(IterableCursor c = new IterableCursor(
-                QueryHelper.contactsLike(query, mContext.get()));
-                c.hasNext(); )
-        {
-android.util.Log.i(this.toString(), "next contact: " + System.nanoTime());
-            Cursor contact = c.next();
-            String lookupKey = contact.getString(QueryHelper.LOOKUP_KEY_INDEX);
-            Cursor emails = QueryHelper.emailsFor(lookupKey, mContext.get());
-
-android.util.Log.i(this.toString(), "starting emails loop: " + System.nanoTime());
-            for(IterableCursor c2 = new IterableCursor(emails); c2.hasNext(); )
-            {
-android.util.Log.i(this.toString(), "next email: " + System.nanoTime());
-                Cursor email = c2.next();
-                String addr = email.getString(0);
-                if(addr.startsWith(query))
-                    results.add(makeQuickActionIntent(
-                            contact.getString(QueryHelper.DISPLAY_NAME_PRIMARY_INDEX),
-                            addr));
-            }
-android.util.Log.i(this.toString(), "completed emails loop: " + System.nanoTime());
-        }
-android.util.Log.i(this.toString(), "completed filtered contacts loop with " + results.size() + " matches: " + System.nanoTime());
-
-        if(results.size() == 0)
-        {
-android.util.Log.i(this.toString(), "filter() failed: " + System.nanoTime());
-            if(query.indexOf('@') == -1 || query.indexOf('@') == query.length() - 1)
-                return results;
-
-            Intent intent = new Intent(Intent.ACTION_SENDTO);
-            intent.setData(new Uri.Builder().scheme("mailto").opaquePart(query).build());
-            intent.putExtra(Module.RESPONSE_TEXT, "-Send email to " + query);
-            results.add(intent);
-        }
-
-android.util.Log.i(this.toString(), "filter() completed: " + System.nanoTime());
+        sort(results, query);
         return results;
     }
 
-
-    private Intent makeQuickActionIntent(String displayNamePrimary,
-            String addr)
-    {
-        Intent intent = new Intent(Intent.ACTION_SENDTO);
-        intent.setData(new Uri.Builder().scheme("mailto").opaquePart(addr).build());
-        intent.putExtra(Module.RESPONSE_TEXT,
-                String.format("-Send email to %1$s (%2$s)",
-                        displayNamePrimary,
-                        addr));
-        return intent;
+    private Intent intentFor(String displayName, String email) {
+        Intent result = new Intent(Intent.ACTION_SENDTO,
+                new Uri.Builder().scheme("mailto").opaquePart(email).build());
+        result.putExtra(ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE, email);
+        result.putExtra(Module.RESPONSE_TEXT,
+                String.format("%1$s <%2$s>", displayName, email));
+        return result;
     }
 }
