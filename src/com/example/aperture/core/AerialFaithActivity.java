@@ -15,7 +15,9 @@ import android.preference.PreferenceManager;
 
 import android.provider.MediaStore;
 
+import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 
 import android.text.InputType;
 
@@ -24,14 +26,12 @@ import android.view.MenuItem;
 import android.view.View;
 
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.CompoundButton;
+import android.widget.HeaderViewListAdapter;
 import android.widget.ListView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
+import android.widget.ListView.FixedViewInfo;
 import android.widget.RelativeLayout;
 import android.widget.SearchView;
-import android.widget.ToggleButton;
+import android.widget.TextView;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -40,24 +40,35 @@ import java.util.TreeSet;
 
 
 public class AerialFaithActivity extends ListActivity
-        implements SearchView.OnQueryTextListener {
+        implements SearchView.OnQueryTextListener, RecognitionListener {
 
     private final static int REQUEST_SPEECH = 1;
     private final static int REQUEST_IMAGE = 2;
     private final static int REQUEST_VIDEO = 4;
 
     private ModuleDispatcher mDispatcher = null;
+    private SpeechRecognizer mRecognizer = null;
+    private Intent mSpeechIntent = null;
 
     private List<IntentWrapper> results = new ArrayList<IntentWrapper>();
 
     private RelativeLayout header = null;
     private SearchView polybox = null;
+    private TextView empty = null;
+
+    private boolean listening = false;
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initializeHeaderView();
+        setContentView(R.layout.aerial_faith);
+
+        initializeSpeechRecognizer();
+
+        polybox = (SearchView)findViewById(android.R.id.text1);
+        polybox.setOnQueryTextListener(this);
+
         setListAdapter(new ArrayAdapter<IntentWrapper>(this,
                 android.R.layout.simple_list_item_1,
                 android.R.id.text1,
@@ -68,6 +79,11 @@ public class AerialFaithActivity extends ListActivity
     public void onStart() {
         super.onStart();
         mDispatcher = new ModuleDispatcher(this);
+        mRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        mRecognizer.setRecognitionListener(this);
+        mSpeechIntent = new Intent(
+                RecognizerIntent.ACTION_VOICE_SEARCH_HANDS_FREE);
+        mSpeechIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
     }
 
 
@@ -75,6 +91,7 @@ public class AerialFaithActivity extends ListActivity
         super.onStop();
         mDispatcher.destroy();
         mDispatcher = null;
+        mRecognizer.destroy();
     }
 
 
@@ -106,7 +123,25 @@ public class AerialFaithActivity extends ListActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem mi) {
-        if(mi.getItemId() == R.id.resolve_stalemates) {
+        if(mi.getItemId() == R.id.menu_txt) {
+            polybox.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+            polybox.requestFocus();
+        }
+        else if(mi.getItemId() == R.id.menu_num) {
+            polybox.setInputType(InputType.TYPE_CLASS_PHONE);
+            polybox.requestFocus();
+        }
+        else if(mi.getItemId() == R.id.menu_img) {
+            Intent cameraIntent = new Intent(
+                    MediaStore.ACTION_IMAGE_CAPTURE);
+            startActivityForResult(cameraIntent, REQUEST_IMAGE);
+        }
+        else if(mi.getItemId() == R.id.menu_vid) {
+            Intent cameraIntent = new Intent(
+                    MediaStore.ACTION_VIDEO_CAPTURE);
+            startActivityForResult(cameraIntent, REQUEST_VIDEO);
+        }
+        else if(mi.getItemId() == R.id.resolve_stalemates) {
             Intent resolveStalematesIntent = new Intent(
                     this, StalemateResolutionActivity.class);
             startActivity(resolveStalematesIntent);
@@ -139,70 +174,6 @@ public class AerialFaithActivity extends ListActivity
             android.widget.Toast.makeText(this, "NotImplemented (vid)",
             android.widget.Toast.LENGTH_SHORT).show();
         }
-    }
-
-
-    private void initializeHeaderView() {
-        header = (RelativeLayout)getLayoutInflater().inflate(
-                R.layout.main, getListView(), false);
-        getListView().addHeaderView(header);
-
-        polybox = (SearchView)header.findViewById(android.R.id.text1);
-        polybox.setInputType(InputType.TYPE_CLASS_TEXT |
-                InputType.TYPE_TEXT_VARIATION_URI);
-
-        // @android:id/text1 : text queries
-        polybox.setOnQueryTextListener(this);
-
-        // @android:id/button1
-        // @android:id/button2
-        // keyboard type
-        RadioGroup grp = (RadioGroup)header.findViewById(R.id.text1_inputtype);
-        grp.setOnCheckedChangeListener(
-                new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup rg, int id) {
-                if(id == android.R.id.button1) {
-                    AerialFaithActivity.this.polybox.setInputType(
-                            InputType.TYPE_CLASS_TEXT |
-                            InputType.TYPE_TEXT_VARIATION_URI);
-                }
-                else if(id == android.R.id.button2) {
-                    AerialFaithActivity.this.polybox.setInputType(
-                            InputType.TYPE_CLASS_PHONE);
-                }
-            }
-        });
-
-        // @android:id/button3 : speech recognition
-        Button b3 = (Button)header.findViewById(android.R.id.button3);
-        b3.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent speechIntent = new Intent(
-                        RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                startActivityForResult(speechIntent, REQUEST_SPEECH);
-            }
-        });
-
-        // @id/button4 : image
-        Button b4 = (Button)header.findViewById(R.id.button4);
-        b4.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent cameraIntent = new Intent(
-                        MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(cameraIntent, REQUEST_IMAGE);
-            }
-        });
-
-        // @id/button5 : video
-        Button b5 = (Button)header.findViewById(R.id.button5);
-        b5.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent cameraIntent = new Intent(
-                        MediaStore.ACTION_VIDEO_CAPTURE);
-                startActivityForResult(cameraIntent, REQUEST_VIDEO);
-            }
-        });
     }
 
 
@@ -241,6 +212,78 @@ public class AerialFaithActivity extends ListActivity
         polybox.setQuery("", false);
         // TODO notify the module that its response was selected?
         startActivity(wrapper.mIntent);
+    }
+
+
+    private void initializeSpeechRecognizer() {
+        empty = (TextView)findViewById(android.R.id.empty);
+        empty.setText(getString(R.string.speech_try_again));
+        empty.setOnClickListener(
+                new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!AerialFaithActivity.this.listening)
+                    AerialFaithActivity.this.startListening();
+                else
+                    AerialFaithActivity.this.stopListening();
+            }
+        });
+    }
+
+
+    private void startListening() {
+        listening = true;
+        mRecognizer.startListening(mSpeechIntent);
+    }
+
+
+    private void stopListening() {
+        listening = false;
+        mRecognizer.stopListening();
+        empty.setText(getString(R.string.speech_try_again));
+    }
+
+
+    @Override
+    public void onBeginningOfSpeech() {}
+    @Override
+    public void onBufferReceived(byte[] buffer) {}
+    @Override
+    public void onEvent(int type, Bundle params) {}
+    @Override
+    public void onRmsChanged(float rmsdB) {}
+
+
+    @Override
+    public void onEndOfSpeech() {
+        empty.setText(getString(R.string.speech_try_again));
+    }
+
+
+    @Override
+    public void onError(int error) {
+        stopListening();
+    }
+
+
+    @Override
+    public void onPartialResults(Bundle partialResults) {
+        onResults(partialResults);
+    }
+
+
+    @Override
+    public void onReadyForSpeech(Bundle params) {
+        empty.setText(getString(R.string.speech_listening));
+    }
+
+
+    @Override
+    public void onResults(Bundle results) {
+        ArrayList<String> candidates = results.getStringArrayList(
+                SpeechRecognizer.RESULTS_RECOGNITION);
+        if(candidates == null || candidates.size() == 0) return;
+        polybox.setQuery(candidates.get(0), false);
     }
 
 }

@@ -1,6 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- menu ID for managing modules -->
     <item type="id" name="resolve_stalemates" />
-    <item type="id" name="text1_inputtype" />
-    <item type="id" name="button4" />
-    <item type="id" name="button5" />
+
+    <!-- menu IDs for other actions -->
+    <item type="id" name="menu_txt" />
+    <item type="id" name="menu_num" />
+    <item type="id" name="menu_img" />
+    <item type="id" name="menu_vid" />
 </resources>

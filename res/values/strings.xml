@@ -14,6 +14,8 @@
     <string name="speech_try_again">Touch to speak</string>
     <string name="speech_listening">Speak now</string>
 
-    <string name="inputtype_alph">Words</string>
-    <string name="inputtype_tel">Numbers</string>
+    <string name="title_menu_txt">Type query</string>
+    <string name="title_menu_num">Numpad</string>
+    <string name="title_menu_img">Picture</string>
+    <string name="title_menu_vid">Video</string>
 </resources>

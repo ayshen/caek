@@ -1,4 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@id/menu_txt"
+          android:icon="@drawable/ic_settings_language"
+          android:title="@string/title_menu_txt"
+          android:showAsAction="ifRoom" />
+    <item android:id="@id/menu_num"
+          android:icon="@drawable/ic_menu_call"
+          android:title="@string/title_menu_num"
+          android:showAsAction="ifRoom" />
+    <item android:id="@id/menu_img"
+          android:icon="@drawable/ic_menu_camera"
+          android:title="@string/title_menu_img"
+          android:showAsAction="ifRoom" />
+    <item android:id="@id/menu_vid"
+          android:icon="@drawable/ic_menu_slideshow"
+          android:title="@string/title_menu_vid"
+          android:showAsAction="ifRoom" />
+
     <item android:id="@id/resolve_stalemates"
           android:title="@string/resolve_stalemates"
           android:showAsAction="never"
