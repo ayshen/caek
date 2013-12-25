@@ -26,6 +26,13 @@ public class PhoneFilter extends Filter {
             ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE
     };
 
+    private final static String[] PREFIXES = new String[] {
+            "place a call to ",
+            "make a call to ",
+            "dial ",
+            "call "
+    };
+
     private boolean isEntirely12Key(String s) {
         for(char c: s.toCharArray())
             if(!PhoneNumberUtils.is12Key(c))
@@ -76,6 +83,14 @@ public class PhoneFilter extends Filter {
         if(!isEntirely12Key(fragment))
             return results;
 
+        boolean hasPrefix = false;
+        for(String prefix: PREFIXES) {
+            if(query.startsWith(prefix)) {
+                query = query.substring(prefix.length());
+                hasPrefix = true;
+            }
+        }
+
         Cursor data = context.getContentResolver().query(
                 ContactsContract.Data.CONTENT_URI,
                 DATA_PROJECTION,
@@ -83,14 +98,33 @@ public class PhoneFilter extends Filter {
                 PHONE_MIMETYPE,
                 null);
 
+        if(hasPrefix)
+            results.addAll(filterByName(data, query));
+        results.addAll(filterByNumber(data, query));
+        data.close();
+
+        return results;
+    }
+
+    private List<Intent> filterByName(Cursor data, String query) {
+        List<Intent> results = new ArrayList<Intent>();
+        query = query.toLowerCase();
+        for(data.moveToFirst(); !data.isAfterLast(); data.moveToNext()) {
+            String name = data.getString(1).toLowerCase();
+            if(name.contains(query))
+                results.add(intentFor(data.getString(1), data.getString(2)));
+        }
+        return results;
+    }
+
+    private List<Intent> filterByNumber(Cursor data, String query) {
+        List<Intent> results = new ArrayList<Intent>();
         for(data.moveToFirst(); !data.isAfterLast(); data.moveToNext()) {
             String phone = PhoneNumberUtils.stripSeparators(data.getString(2));
             if(phone.contains(query)) {
                 results.add(intentFor(data.getString(1), data.getString(2)));
             }
         }
-        data.close();
-
         sort(results, query);
         return results;
     }

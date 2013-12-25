@@ -59,8 +59,7 @@ public class ContactsModule extends Module {
                 catch(InstantiationException enew) {}
             }
 
-            if(results.size() == 0)
-                results.addAll(viewIntentsFor(contactsLike(query)));
+            results.addAll(viewIntentsFor(contactsLike(query)));
 
             return results;
         }

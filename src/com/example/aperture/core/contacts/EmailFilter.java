@@ -25,6 +25,12 @@ public class EmailFilter extends Filter {
             ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE
     };
 
+    private final static String[] PREFIXES = new String[] {
+            "send an email to ",
+            "send email to ",
+            "email "
+    };
+
     private final static class EmailComparer implements java.util.Comparator<Intent> {
         private String mFragment;
         public EmailComparer(String fragment) {
@@ -93,6 +99,15 @@ public class EmailFilter extends Filter {
     public List<Intent> filter(Context context, String query) {
         List<Intent> results = new ArrayList<Intent>();
 
+        boolean hasPrefix = false;
+        for(String prefix: PREFIXES) {
+            if(query.startsWith(prefix)) {
+                query = query.substring(prefix.length());
+                hasPrefix = true;
+                break;
+            }
+        }
+
         Cursor data = context.getContentResolver().query(
                 ContactsContract.Data.CONTENT_URI,
                 DATA_PROJECTION,
@@ -100,16 +115,32 @@ public class EmailFilter extends Filter {
                 EMAIL_MIMETYPE,
                 null);
 
+        if(hasPrefix)
+            results.addAll(filterByName(data, query));
+        results.addAll(filterByAddress(data, query));
+        data.close();
+
+        return results;
+    }
+
+    private List<Intent> filterByName(Cursor data, String query) {
+        List<Intent> results = new ArrayList<Intent>();
+        query = query.toLowerCase();
+        for(data.moveToFirst(); !data.isAfterLast(); data.moveToNext()) {
+            String name = data.getString(1).toLowerCase();
+            if(name.contains(query))
+                results.add(intentFor(data.getString(1), data.getString(2)));
+        }
+        return results;
+    }
+
+    private List<Intent> filterByAddress(Cursor data, String query) {
+        List<Intent> results = new ArrayList<Intent>();
         for(data.moveToFirst(); !data.isAfterLast(); data.moveToNext()) {
             String email = data.getString(2);
-            String username = email.substring(0, email.indexOf('@'));
-            String domain = email.substring(email.indexOf('@')+1);
-
             if(email.contains(query))
                 results.add(intentFor(data.getString(1), email));
         }
-        data.close();
-
         sort(results, query);
         return results;
     }
