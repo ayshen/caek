@@ -24,6 +24,7 @@ import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import android.widget.ArrayAdapter;
 import android.widget.HeaderViewListAdapter;
@@ -126,10 +127,14 @@ public class AerialFaithActivity extends ListActivity
         if(mi.getItemId() == R.id.menu_txt) {
             polybox.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
             polybox.requestFocus();
+            ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
+                    .showSoftInput(polybox, InputMethodManager.SHOW_FORCED);
         }
         else if(mi.getItemId() == R.id.menu_num) {
             polybox.setInputType(InputType.TYPE_CLASS_PHONE);
             polybox.requestFocus();
+            ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
+                    .showSoftInput(polybox, InputMethodManager.SHOW_FORCED);
         }
         else if(mi.getItemId() == R.id.menu_img) {
             Intent cameraIntent = new Intent(
@@ -158,6 +163,7 @@ public class AerialFaithActivity extends ListActivity
         }
 
         if(request == REQUEST_SPEECH) {
+            // deprecated. TODO remove.
             ArrayList<String> results = data.getStringArrayListExtra(
                     RecognizerIntent.EXTRA_RESULTS);
             if(results == null || results.size() == 0) {
@@ -256,6 +262,7 @@ public class AerialFaithActivity extends ListActivity
 
     @Override
     public void onEndOfSpeech() {
+        listening = false;
         empty.setText(getString(R.string.speech_try_again));
     }
 
