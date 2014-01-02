@@ -269,7 +269,7 @@ public class AerialFaithActivity extends ListActivity
 
     @Override
     public void onError(int error) {
-        stopListening();
+        onEndOfSpeech();
     }
 
 
